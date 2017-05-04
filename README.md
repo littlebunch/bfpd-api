@@ -1,5 +1,5 @@
 # bfpd-api
-##REST API for the Branded Food Products Database  
+REST API for the Branded Food Products Database  
 A small web server providing a REST API for the Branded Food Products Database.  
 ### Installation
 Clone into your [go workspace](https://golang.org/doc/code.html)  
