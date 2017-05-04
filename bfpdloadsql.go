@@ -1,12 +1,16 @@
 package main
 
+/*
+* Command line utility to bulk load json representation of bpfd foods.  Uses json decoder, prepared statements and transactions.
+* Often requires tweaking innodb_lock_wait_timeout to avoid concurrency deadlock on transaction blocks,e.g > 1000 .
+* The default timeout value is rather high -- 5000.
+ */
 import (
 	"bfpd/model"
 	"database/sql"
 	"encoding/json"
 	"flag"
 	"fmt"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"io/ioutil"
 	"log"
 	"os"
@@ -14,29 +18,11 @@ import (
 	"time"
 )
 
-
-
-/*type DB struct {
-	*gorm.DB
-}*/
 var wg sync.WaitGroup
 var tokens = make(chan struct{}, 200)
 var i = flag.String("i", "", "Input JSON file name")
 var c = flag.String("c", "config.json", "Config file")
-var n = flag.Int("n",5000,"Number of foods in a transaction")
-
-// connect the datasource
-/*func Database(c *Config) (*sql.DB, error) {
-  cs:=fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/%s?charset=utf8&parseTime=True&loc=Local",c.User,c.Pw,c.Db)
-	//open a db connection
-	db, err := sql.Open("mysql", cs)
-	if err != nil {
-		panic("failed to connect database")
-	}
-	db.DB().SetMaxIdleConns(10)
-	db.DB().SetMaxOpenConns(500)
-	return &DB{db}, nil
-}*/
+var n = flag.Int("n", 5000, "Number of foods in a transaction")
 
 func main() {
 	var cs bfpd.Config
@@ -59,7 +45,6 @@ func main() {
 		os.Exit(1)
 	}
 	defer ifile.Close()
-	//Migrate the schema
 	c := fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/%s?charset=utf8&parseTime=True&loc=Local", cs.User, cs.Pw, cs.Db)
 	//open a db connection
 	db, err := sql.Open("mysql", c)
@@ -108,44 +93,28 @@ func createFood(foods []bfpd.Food, db *sql.DB) {
 
 	defer wg.Done()
 	// get manufacturer id
-	tx,err:=db.Begin()
+	tx, err := db.Begin()
 	checkerr(err)
 	defer tx.Rollback()
 	manq, err := tx.Prepare("select id from manufacturers where name=?")
 	checkerr(err)
-	//defer manq.Close()
 	// insert nutrient data
 	nd, err := tx.Prepare("insert into nutrient_data(created_at,value,datapoints,standard_error,add_nut_mark,number_studies,minimum,maximum,degrees_freedom,lower_eb,upper_eb,comment,source_id,derivation_id,nutrient_id,food_id) values(?,?,?,?,?,?,?,?,?,?,?,?,(select id from source_codes where code=?),(select id from derivations where code=?),(select id from nutrients where nutrientno=?),?)")
-	//checkerr(err)
 	if err != nil {
-		log.Fatal("BAD!",err)
+		log.Fatal("BAD!", err)
 	}
-	//defer nd.Close()
-	// insert manufacturers
 	man, err := tx.Prepare("insert into manufacturers(created_at,name) values(?,?)")
 	checkerr(err)
-	//defer man.Close()
-	// insert weights
 	wd, err := tx.Prepare("insert into weights(version,seq,amount,description,gramweight,datapoints,stddeviation,food_id) values(?,?,?,?,?,?,?,?)")
 	checkerr(err)
-	//defer wd.Close()
-	// insert into ingredients
 	ingd, err := tx.Prepare("insert into ingredients(description,updated) values(?,?)")
 	checkerr(err)
-	//defer ingd.Close()
-	// insert food
 	fd, err := tx.Prepare("insert into foods(created_at,ndbno,description,food_group_id,ingredients_id,manufacturer_id,datasource) values(?,?,?,(select id from food_groups where cd=?),?,?,?)")
 	checkerr(err)
-	//defer fd.Close()
 	tokens <- struct{}{}
-	//  log.Printf("%d ndbno=%s",g,f.Ndbno)
-	//tx:=db.Begin()
 	for _, f := range foods {
 		// check for  manufacturer ID
 		err := manq.QueryRow(f.Manufacturer.Name).Scan(&(f.Manufacturer.Id))
-		/*if err != nil {
-			log.Fatal("manufactuer query %s",err)
-		}*/
 		if f.Manufacturer.Id == 0 {
 			r, err := man.Exec(time.Now(), f.Manufacturer.Name)
 			checkerr(err)
@@ -158,12 +127,11 @@ func createFood(foods []bfpd.Food, db *sql.DB) {
 		// insert ingredients_id
 		r, err := ingd.Exec(f.Ingredients.Description, f.Ingredients.Available)
 		checkerr(err)
-
 		ingid, err := r.LastInsertId()
 		checkerr(err)
 		// insert food
 		//created_at,ndbno,description,food_group_id,ingredients_id,manufacturer_id,datasource
-		r, err = fd.Exec(time.Now(), f.Ndbno, f.Description, f.FoodGroup.Cd, ingid, f.ManufacturerID,f.Datasource)
+		r, err = fd.Exec(time.Now(), f.Ndbno, f.Description, f.FoodGroup.Cd, ingid, f.ManufacturerID, f.Datasource)
 		checkerr(err)
 		fid, err := r.LastInsertId()
 		checkerr(err)
@@ -192,14 +160,13 @@ func createFood(foods []bfpd.Food, db *sql.DB) {
 				item.NutrientID,
 				fid)
 			if err != nil {
-				log.Fatal("nd ",err)
+				log.Fatal("nd ", err)
 			}
 		}
 
 	}
 	checkerr(tx.Commit())
 	log.Printf("finished with transaction block.")
-	// }
 	<-tokens
 }
 func checkerr(e error) {
