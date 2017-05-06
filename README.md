@@ -42,6 +42,7 @@ curl -X POST -H "Content-type:application/json" -d '{"password":"your-password",
 or if you prefer http:
 ```
 http -v --json POST localhost:8080/ndb/api/v1/login username=littlebunch password=littlebunch
+```
 >Add foods to the database:   
 ```
 curl -X POST -H "Content-type:application/json" -H "Authorization:Bearer <your jwt token>" \
