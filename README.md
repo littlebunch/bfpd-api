@@ -39,6 +39,9 @@ Authentication is required for POST, PUT and DELETE.  Use the login handler to o
 ``` 
 curl -X POST -H "Content-type:application/json" -d '{"password":"your-password","username":"your-user-name"}' http://localhost:8080/ndb/api/v1/login 
 ```
+or if you prefer http:
+```
+http -v --json POST localhost:8080/ndb/api/v1/login username=littlebunch password=littlebunch
 >Add foods to the database:   
 ```
 curl -X POST -H "Content-type:application/json" -H "Authorization:Bearer <your jwt token>" \
@@ -52,9 +55,16 @@ curl -X POST -H "Content-type:application/json" -H "Authorization:Bearer <your j
 curl -X DELETE -H "Content-type:application/json" -H "Authorization:Bearer <your jwt token>" \
 http://localhost:8080/ndb/api/v1/food/<food-db-id>
 ```
+or
+ ```
+ http DELETE --json localhost:8080/ndb/api/v1/food "Authorization:Bearer <your jwt token>" id=<food-db-id>
 >Fetch food by ndbno:
 ```
 curl -X GET http://localhost:8000/ndb/api/v1/ndb/45001535
+```
+>Fetch a list of foods:
+```
+http GET localhost:8080/ndb/api/v1/food/ max=50 offset=50
 ```
 >Add a nutrient
 ```
