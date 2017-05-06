@@ -35,7 +35,7 @@ where
   ```
 ### Usage
 Authentication is required for POST, PUT and DELETE.  Use the login handler to obtain a token which then must be sent in the Authorization header as shown in the examples below.     
->Authenticate and obtain JWT token:
+Authenticate and obtain JWT token:
 ``` 
 curl -X POST -H "Content-type:application/json" -d '{"password":"your-password","username":"your-user-name"}' http://localhost:8080/ndb/api/v1/login 
 ```
@@ -43,7 +43,7 @@ or if you prefer http:
 ```
 http -v --json POST localhost:8080/ndb/api/v1/login username=your-password password=your-user-name
 ```
->Add foods to the database:   
+Add foods to the database:   
 ```
 curl -X POST -H "Content-type:application/json" -H "Authorization:Bearer <your jwt token>" \
 -d '{"ndbno":"45001535","name":"STEAK HOUSE STEAK SAUCE, UPC: 5051379020064","manu":{"name":"FRESH & EASY"},"fg":{"cd":"4500"}, \
@@ -51,7 +51,7 @@ curl -X POST -H "Content-type:application/json" -H "Authorization:Bearer <your j
 "measures":[{"seq":1,"unit":"Tbsp","amt":1.0,"weight":15.0}], \
 "nutrients":[{"nutno":203,"value":0.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":204,"value":0.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":205,"value":20.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":208,"value":100.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":269,"value":20.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":291,"value":0.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":301,"value":133.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":303,"value":4.8,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":307,"value":833.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":318,"value":2000.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":401,"value":16.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":601,"value":0.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":605,"value":0.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":606,"value":0.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}}]' http://localhost:8000/ndb/api/v1/food
 ```
->Delete a food by database id:
+Delete a food by database id:
 ```
 curl -X DELETE -H "Content-type:application/json" -H "Authorization:Bearer <your jwt token>" \
 http://localhost:8080/ndb/api/v1/food/<food-db-id>
@@ -60,15 +60,15 @@ or
  ```
  http DELETE --json localhost:8080/ndb/api/v1/food "Authorization:Bearer <your jwt token>" id=<food-db-id>
  ```
->Fetch food by ndbno:
+Fetch food by ndbno:
 ```
 curl -X GET http://localhost:8000/ndb/api/v1/ndb/45001535
 ```
->Fetch a list of foods:
+Fetch a list of foods:
 ```
 http GET localhost:8080/ndb/api/v1/food/ max=50 offset=50
 ```
->Add a nutrient
+Add a nutrient
 ```
 curl -X POST -H "Content-type:application/json" -H "Authorization:Bearer <your jwt token>" \
 -d '{"desc":"Total lipid (fat)","nutno":204,"Decimalpoint":2,"Tagname":"FAT","Srnutorder":800,"Unit":{"Unit":"g"}}' \ http://localhost:8080/ndb/api/v1/nutrient
