@@ -55,6 +55,6 @@ curl -X GET -H "Content-type:application/json" -d '{"password":"littlebunch","us
 ```
 >Add a nutrient
 ```
-curl -X POST -H "Content-type:application/json" -H "Authorization:Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJST0xFUyI6WyJBRE1JTiIsIlVTRVIiXSwiZXhwIjoxNDkzNjAxMjIwLCJpZCI6ImxpdHRsZWJ1bmNoIiwib3JpZ19pYXQiOjE0OTM1OTc2MjB9.1ovrPwk7y0nD7U9BnGkifo0vJbmIlvu1voM8VOyic68" \
+curl -X POST -H "Content-type:application/json" -H "Authorization:Bearer <your jwt token>" \
 -d '{"desc":"Total lipid (fat)","nutno":204,"Decimalpoint":2,"Tagname":"FAT","Srnutorder":800,"Unit":{"Unit":"g"}}' \ http://localhost:8080/ndb/api/v1/nutrient
 ```
