@@ -9,7 +9,7 @@ Install supporting packages as needed:
 *[bcrypt](https://godoc.org/golang.org/x/crypto/bcrypt)       
 *[gopkg.in/yaml.v2](http://gopkg.in/yaml.v2)   
 ### Configuration
-Configuration is minimal and can be in a yaml file or envirnoment variables which override the config file.  
+Configuration is minimal and can be in a YAML file or envirnoment variables which override the config file.  
     
 YAML    
 ```
@@ -24,7 +24,8 @@ BFPD_USER=Database_user
 BFPD_PW=Database_user_password
 ```
 ### Running
-```go build bfpd
+```
+go build bfpd.go
 ./bfpd -d -i -c /path/to/config.yaml   
 where
   -d use gorm debugging   
@@ -51,7 +52,7 @@ http://localhost:8080/ndb/api/v1/food/<food-db-id>
 ```
 >Fetch food by ndbno:
 ```
-curl -X GET -H "Content-type:application/json" -d '{"password":"littlebunch","username":"littlebunch"}' http://localhost:8000/ndb/api/v1/ndb/45001535
+curl -X GET http://localhost:8000/ndb/api/v1/ndb/45001535
 ```
 >Add a nutrient
 ```
