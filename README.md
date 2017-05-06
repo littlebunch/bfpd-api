@@ -30,9 +30,11 @@ go build bfpd.go
 where
   -d use gorm debugging   
   -i initialize a database schema
-  -c configuration file to use (defaults to ./config.yaml )   
+  -c configuration file to use (defaults to ./config.yaml )  
+  -p TCP port to run server (defaults to 8080)
   ```
 ### Usage
+Authentication is required for POST, PUT and DELETE.  Use the login handler to obtain a token which then must be sent in the Authorization header as shown in the examples below.     
 >Authenticate and obtain JWT token:
 ``` 
 curl -X POST -H "Content-type:application/json" -d '{"password":"your-password","username":"your-user-name"}' http://localhost:8080/ndb/api/v1/login 
