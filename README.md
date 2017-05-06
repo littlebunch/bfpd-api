@@ -59,8 +59,8 @@ http://localhost:8080/ndb/api/v1/food/<food-db-id>
 or
  ```
  http DELETE --json localhost:8080/ndb/api/v1/food "Authorization:Bearer <your jwt token>" id=<food-db-id>
+ ```
 >Fetch food by ndbno:
-```
 curl -X GET http://localhost:8000/ndb/api/v1/ndb/45001535
 ```
 >Fetch a list of foods:
