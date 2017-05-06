@@ -31,3 +31,30 @@ where
   -i initialize a database schema
   -c configuration file to use (defaults to ./config.yaml )   
   ```
+### Usage
+>Authenticate and obtain JWT token:
+``` 
+curl -X POST -H "Content-type:application/json" -d '{"password":"your-password","username":"your-user-name"}' http://localhost:8080/ndb/api/v1/login 
+```
+>Add foods to the database:   
+```
+curl -X POST -H "Content-type:application/json" -H "Authorization:Bearer <your jwt token>" \
+-d '{"ndbno":"45001535","name":"STEAK HOUSE STEAK SAUCE, UPC: 5051379020064","manu":{"name":"FRESH & EASY"},"fg":{"cd":"4500"}, \
+"ingredients":{"desc":"TOMATO PUREE, ONION PUREE. SUGAR, MOLASSES, DISTILLED VINEGAR, HORSERADISH, SALT, SOYBEAN OIL, ORANGE JUICE CONCENTRATE, LEMON JUICE CONCENTRATE, ANCHOVY PASTE(ANCHOVY OLIVE OIL, ACETIC ACID), ROASTED GARLIC PUREE(GARLIC, WATER, NATURAL FLAVOR, CITRIC ACID), NATURAL FLAVOR, JALAPENO PUREE(JALAPENO CHILE, DISTILLED VINEGAR, SALT), SOY SAUCE(WATER, WHEAT, SOYBEAN, SALT), CHILI POWDER, MUSTARD FLOUR, XANTHAN GUM, BLACK PEPPER, CARAMEL COLORING, CLOVE POWDER.","updated":"01/02/2014"}, \
+"measures":[{"seq":1,"unit":"Tbsp","amt":1.0,"weight":15.0}], \
+"nutrients":[{"nutno":203,"value":0.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":204,"value":0.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":205,"value":20.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":208,"value":100.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":269,"value":20.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":291,"value":0.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":301,"value":133.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":303,"value":4.8,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":307,"value":833.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":318,"value":2000.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":401,"value":16.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":601,"value":0.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":605,"value":0.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}},{"nutno":606,"value":0.0,"dp":0,"source":{"code":"8"},"deriv":{"code":"LCBF"}}]' http://localhost:8000/ndb/api/v1/food
+```
+>Delete a food by database id:
+```
+curl -X DELETE -H "Content-type:application/json" -H "Authorization:Bearer <your jwt token>" \
+http://localhost:8080/ndb/api/v1/food/<food-db-id>
+```
+>Fetch food by ndbno:
+```
+curl -X GET -H "Content-type:application/json" -d '{"password":"littlebunch","username":"littlebunch"}' http://localhost:8000/ndb/api/v1/ndb/45001535
+```
+>Add a nutrient
+```
+curl -X POST -H "Content-type:application/json" -H "Authorization:Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJST0xFUyI6WyJBRE1JTiIsIlVTRVIiXSwiZXhwIjoxNDkzNjAxMjIwLCJpZCI6ImxpdHRsZWJ1bmNoIiwib3JpZ19pYXQiOjE0OTM1OTc2MjB9.1ovrPwk7y0nD7U9BnGkifo0vJbmIlvu1voM8VOyic68" \
+-d '{"desc":"Total lipid (fat)","nutno":204,"Decimalpoint":2,"Tagname":"FAT","Srnutorder":800,"Unit":{"Unit":"g"}}' \ http://localhost:8080/ndb/api/v1/nutrient
+```
