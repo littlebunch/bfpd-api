@@ -6,7 +6,6 @@ import (
 	//"encoding/json"
 	"flag"
 	"fmt"
-	//"github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
@@ -19,8 +18,9 @@ import (
 )
 
 var d = flag.Bool("d", false, "Debug")
-var i = flag.Bool("i", false, "Initialize database database")
+var i = flag.Bool("i", false, "Initialize database")
 var c = flag.String("c", "config.yaml", "YAML Config file")
+var p = flag.String("p","8080","TCP port to used")
 
 /*type DB struct {
 	*gorm.DB
@@ -64,6 +64,7 @@ func main() {
 		db.LogMode(*d)
 	}
 	var u *auth.User
+	//port:=append(":",*p)
 	if *i == true {
 		log.Printf("Initializing database...")
 		db.AutoMigrate(&bfpd.Food{},
@@ -91,8 +92,11 @@ func main() {
 	// initialize our jwt authentication
 
 	authMiddleware := u.AuthMiddleware(db)
-	router := gin.Default()
-
+	//router := gin.Default()
+	router:=gin.New()
+	router.Use(gin.Logger())
+	router.Use(gin.Recovery())
+	//router.Use(authMiddleware)
 	v1 := router.Group("/ndb/api/v1")
 	{
 
@@ -140,7 +144,7 @@ func main() {
 			c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "data": _food})
 		})
 
-		v1.PUT("/food/:id", func(c *gin.Context) {
+		v1.PUT("/food/:id", authMiddleware.MiddlewareFunc(),func(c *gin.Context) {
 			var food bfpd.Food
 			foodId := c.Param("id")
 			completed, _ := strconv.Atoi(c.PostForm("completed"))
@@ -152,7 +156,7 @@ func main() {
 			db.Model(&food).Update("Description", c.PostForm("Description"))
 			c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "message": "food updated successfully!", "completed": completed})
 		})
-		v1.DELETE("/food/:id", func(c *gin.Context) {
+		v1.DELETE("/food/:id", authMiddleware.MiddlewareFunc(),func(c *gin.Context) {
 			var food bfpd.Food
 			foodId := c.Param("id")
 			db.Preload("Ingredients").Preload("NutrientData").Preload("Measures").First(&food, foodId)
@@ -205,7 +209,7 @@ func main() {
 			c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "data": nutr})
 		})
 		// create a food
-		v1.POST("/food/", func(c *gin.Context) {
+		v1.POST("/food/", authMiddleware.MiddlewareFunc(),func(c *gin.Context) {
 			var food bfpd.Food
 			var manu bfpd.Manufacturer
 			var nutr bfpd.Nutrient
@@ -250,7 +254,7 @@ func main() {
 		})
 
 		// create a nutrient
-		v1.POST("/nutrient/", func(c *gin.Context) {
+		v1.POST("/nutrient/", authMiddleware.MiddlewareFunc(),func(c *gin.Context) {
 			var nutr bfpd.Nutrient
 			var unit bfpd.Unit
 			if c.BindJSON(&nutr) == nil {
@@ -268,7 +272,7 @@ func main() {
 			}
 		})
 	}
-	router.Run()
+	router.Run(":"+*p)
 
 }
 func transformfood(f *bfpd.Food) bfpd.TransformedFood {
