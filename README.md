@@ -8,6 +8,7 @@ Install supporting packages as needed:
 *[gin-jwt](https://github.com/appleboy/gin-jwt)    
 *[bcrypt](https://godoc.org/golang.org/x/crypto/bcrypt)       
 *[gopkg.in/yaml.v2](http://gopkg.in/yaml.v2)   
+*[endless](https://github.com/fvbock/endless)
 ### Configuration
 Configuration is minimal and can be in a YAML file or envirnoment variables which override the config file.  
     
