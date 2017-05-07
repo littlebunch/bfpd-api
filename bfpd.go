@@ -3,7 +3,7 @@ package main
 import (
 	"bfpd/auth"
 	"bfpd/model"
-	//"encoding/json"
+	"github.com/fvbock/endless"
 	"flag"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -96,7 +96,6 @@ func main() {
 	router:=gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
-	//router.Use(authMiddleware)
 	v1 := router.Group("/ndb/api/v1")
 	{
 
@@ -272,7 +271,7 @@ func main() {
 			}
 		})
 	}
-	router.Run(":"+*p)
+	endless.ListenAndServe(":"+*p,router)
 
 }
 func transformfood(f *bfpd.Food) bfpd.TransformedFood {
