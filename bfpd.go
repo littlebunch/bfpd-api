@@ -3,9 +3,9 @@ package main
 import (
 	"bfpd/auth"
 	"bfpd/model"
-	"github.com/fvbock/endless"
 	"flag"
 	"fmt"
+	"github.com/fvbock/endless"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
@@ -19,12 +19,8 @@ import (
 
 var d = flag.Bool("d", false, "Debug")
 var i = flag.Bool("i", false, "Initialize database")
-var c = flag.String("c", "config.yaml", "YAML Config file")
+var c = flag.String("c", "config.yml", "YAML Config file")
 var p = flag.String("p","8080","TCP port to used")
-
-/*type DB struct {
-	*gorm.DB
-}*/
 
 func Database(cs *bfpd.Config) (*bfpd.DB, error) {
 	c := fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/%s?charset=utf8&parseTime=True&loc=Local", cs.User, cs.Pw, cs.Db)
@@ -101,7 +97,7 @@ func main() {
 
 		v1.POST("/login", authMiddleware.LoginHandler)
 		// page through foods
-		v1.GET("/food/", func(c *gin.Context) {
+		v1.GET("/food", func(c *gin.Context) {
 			var foods []bfpd.Food
 			var _foods []bfpd.TransformedFood
 			max, err := strconv.ParseInt(c.Query("max"), 10, 0)

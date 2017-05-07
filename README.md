@@ -27,11 +27,11 @@ BFPD_PW=Database_user_password
 ### Running
 ```
 go build bfpd.go
-./bfpd -d -i -c /path/to/config.yaml   
+./bfpd -d -i -c /path/to/config.yml   
 where
   -d use gorm debugging   
   -i initialize a database schema
-  -c configuration file to use (defaults to ./config.yaml )  
+  -c configuration file to use (defaults to ./config.yml )  
   -p TCP port to run server (defaults to 8080)
   ```
 ### Usage
