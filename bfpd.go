@@ -34,7 +34,30 @@ func Database(cs *bfpd.Config) (*bfpd.DB, error) {
 	db.DB().SetMaxOpenConns(100)
 	return &bfpd.DB{db}, nil
 }
-
+func initdb(db *bfpd.DB) {
+		var u *auth.User
+		db.AutoMigrate(&bfpd.Food{},
+		&bfpd.Ingredients{},
+		&bfpd.FoodGroup{},
+		&bfpd.Weights{},
+		&bfpd.Nutrient{},
+		&bfpd.Manufacturer{},
+		&bfpd.Unit{},
+		&bfpd.SourceCode{},
+		&bfpd.Derivation{},
+		&bfpd.FootNote{},
+		&bfpd.NutrientData{},
+		&auth.User{},
+		&auth.Role{})
+		db.Model(&bfpd.Food{}).AddForeignKey("food_group_id", "food_groups(id)", "NO ACTION", "NO ACTION")
+		db.Model(&bfpd.Food{}).AddForeignKey("ingredients_id", "ingredients(id)", "CASCADE", "CASCADE")
+		db.Model(&bfpd.Food{}).AddForeignKey("manufacturer_id", "manufacturers(id)", "NO ACTION", "NO ACTION")
+		db.Model(&bfpd.NutrientData{}).AddForeignKey("food_id", "foods(id)", "NO ACTION", "NO ACTION")
+		db.Model(&bfpd.NutrientData{}).AddForeignKey("nutrient_id", "nutrients(id)", "NO ACTION", "NO ACTION")
+		db.Model(&bfpd.NutrientData{}).AddForeignKey("derivation_id", "derivations(id)", "NO ACTION", "NO ACTION")
+		db.Model(&bfpd.NutrientData{}).AddForeignKey("source_id", "source_codes(id)", "NO ACTION", "NO ACTION")
+		u.BootstrapUsers(db)
+}
 func main() {
 	flag.Parse()
 	// try to read config from a file
@@ -59,34 +82,13 @@ func main() {
 	if *d == true {
 		db.LogMode(*d)
 	}
-	var u *auth.User
+
 	//port:=append(":",*p)
 	if *i == true {
-		log.Printf("Initializing database...")
-		db.AutoMigrate(&bfpd.Food{},
-			&bfpd.Ingredients{},
-			&bfpd.FoodGroup{},
-			&bfpd.Weights{},
-			&bfpd.Nutrient{},
-			&bfpd.Manufacturer{},
-			&bfpd.Unit{},
-			&bfpd.SourceCode{},
-			&bfpd.Derivation{},
-			&bfpd.FootNote{},
-			&bfpd.NutrientData{},
-			&auth.User{},
-			&auth.Role{})
-		db.Model(&bfpd.Food{}).AddForeignKey("food_group_id", "food_groups(id)", "NO ACTION", "NO ACTION")
-		db.Model(&bfpd.Food{}).AddForeignKey("ingredients_id", "ingredients(id)", "CASCADE", "CASCADE")
-		db.Model(&bfpd.Food{}).AddForeignKey("manufacturer_id", "manufacturers(id)", "NO ACTION", "NO ACTION")
-		db.Model(&bfpd.NutrientData{}).AddForeignKey("food_id", "foods(id)", "NO ACTION", "NO ACTION")
-		db.Model(&bfpd.NutrientData{}).AddForeignKey("nutrient_id", "nutrients(id)", "NO ACTION", "NO ACTION")
-		db.Model(&bfpd.NutrientData{}).AddForeignKey("derivation_id", "derivations(id)", "NO ACTION", "NO ACTION")
-		db.Model(&bfpd.NutrientData{}).AddForeignKey("source_id", "source_codes(id)", "NO ACTION", "NO ACTION")
-		u.BootstrapUsers(db)
+		initdb(db)
 	}
 	// initialize our jwt authentication
-
+	var u *auth.User
 	authMiddleware := u.AuthMiddleware(db)
 	//router := gin.Default()
 	router:=gin.New()
@@ -96,7 +98,7 @@ func main() {
 	{
 
 		v1.POST("/login", authMiddleware.LoginHandler)
-		// page through foods
+		// page through foods with end=max+offset and start=offset
 		v1.GET("/food", func(c *gin.Context) {
 			var foods []bfpd.Food
 			var _foods []bfpd.TransformedFood
@@ -113,8 +115,6 @@ func main() {
 				page = 1
 			}
 			offset := page * max
-			log.Printf("page=%d offset=%d max=%d", page, offset, max)
-
 			db.Preload("Manufacturer").Preload("Measures").Preload("FoodGroup").Preload("Ingredients").Preload("NutrientData").Preload("NutrientData.Nutrient").Preload("NutrientData.Sourcecode").Preload("NutrientData.Derivation").Offset(offset).Limit(max).Find(&foods)
 			if foods == nil {
 				c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "No food found!"})
@@ -136,19 +136,27 @@ func main() {
 				return
 			}
 			_food := transformfood(&food)
+
 			c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "data": _food})
 		})
 
 		v1.PUT("/food/:id", authMiddleware.MiddlewareFunc(),func(c *gin.Context) {
-			var food bfpd.Food
+			var food,ufood bfpd.Food
 			foodId := c.Param("id")
 			completed, _ := strconv.Atoi(c.PostForm("completed"))
 			db.First(&food, foodId)
 			if food.Id == 0 {
-				c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "No food found!"})
+				c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusBadRequest, "message": "No food found!"})
 				return
 			}
-			db.Model(&food).Update("Description", c.PostForm("Description"))
+
+			err := c.BindJSON(&ufood)
+			if err != nil {
+				log.Printf("Error=%v\n",err)
+				c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusBadRequest, "message": "Cannot bind JSON!"})
+				return
+			}
+			db.Model(&food).Updates(&ufood)
 			c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "message": "food updated successfully!", "completed": completed})
 		})
 		v1.DELETE("/food/:id", authMiddleware.MiddlewareFunc(),func(c *gin.Context) {
@@ -156,43 +164,35 @@ func main() {
 			foodId := c.Param("id")
 			db.Preload("Ingredients").Preload("NutrientData").Preload("Measures").First(&food, foodId)
 			if food.Id == 0 {
-				c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "No food found!"})
+				c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusBadRequest, "message": "No food found!"})
 				return
 			}
 			tx := db.Begin()
 			if err := tx.Where("id=?", food.Ingredients.Id).Delete(&bfpd.Ingredients{}).Error; err != nil {
 				tx.Rollback()
-				c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "Delete failed!"})
+				c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusBadRequest, "message": "Delete failed!"})
 				return
 			}
 			if err := tx.Where("food_id=?", food.Id).Delete(&bfpd.NutrientData{}).Error; err != nil {
 				tx.Rollback()
-				c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "Delete failed!"})
+				c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusBadRequest, "message": "Delete failed!"})
 				return
 			}
 			if err := tx.Where("food_id=?", food.Id).Delete(&bfpd.Weights{}).Error; err != nil {
 				tx.Rollback()
-				c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "Delete failed!"})
+				c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusBadRequest, "message": "Delete failed!"})
 				return
 			}
 			if err := tx.Delete(&food).Error; err != nil {
 				tx.Rollback()
-				c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "Delete failed!"})
+				c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusBadRequest, "message": "Delete failed!"})
 				return
 			}
 			tx.Commit()
 			c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "message": "food deleted successfully!"})
 		})
-		v1.GET("/ndbno/:ndbno", func(c *gin.Context) {
-			var food bfpd.Food
-			ndbno := c.Param("ndbno")
-			db.Where("ndbno = ?", ndbno).Find(&food)
-			if food.Id == 0 {
-				c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "No food found!"})
-				return
-			}
-			_food := bfpd.TransformedFood{ID: food.Id, Ndbno: food.Ndbno, Description: food.Description}
-			c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "data": _food})
+		v1.GET("/ndbno/:ndbno", func(c *gin.Context ) {
+			findndbno(c,db)
 		})
 		v1.GET("/nutrient/", func(c *gin.Context) {
 			var nutr []bfpd.Nutrient
@@ -244,7 +244,7 @@ func main() {
 				c.JSON(http.StatusCreated, gin.H{"status": http.StatusCreated, "message": "Food item created successfully!", "resourceId": food.Id})
 			} else {
 				log.Printf("err %v\n", err)
-				c.JSON(http.StatusCreated, gin.H{"status": http.StatusNotFound, "message": "Can't parse json1!"})
+				c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusBadRequest, "message": "Can't parse json1!"})
 			}
 		})
 
@@ -274,3 +274,15 @@ func transformfood(f *bfpd.Food) bfpd.TransformedFood {
 	var t *bfpd.TransformedNutrientData
 	return bfpd.TransformedFood{ID: f.Id, Ndbno: f.Ndbno, Description: f.Description, Manufacturer: f.Manufacturer.Name, Source: f.Datasource, FoodGroup: bfpd.TransformedFoodGroup{Code: f.FoodGroup.Cd, Description: f.FoodGroup.Description}, Measures: f.Measures, Nutrients: t.Transform(&(f.NutrientData)), Ingredients: f.Ingredients.Description}
 }
+//
+func findndbno(c *gin.Context,db *bfpd.DB) {
+		var food bfpd.Food
+		ndbno := c.Param("ndbno")
+		db.Preload("Manufacturer").Preload("Measures").Preload("Ingredients").Preload("FoodGroup").Preload("NutrientData").Preload("NutrientData.Nutrient").Preload("NutrientData.Sourcecode").Preload("NutrientData.Derivation").Where("ndbno = ?", ndbno).Find(&food)
+		if food.Id == 0 {
+			c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "No food found!"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "data":  transformfood(&food)})
+}
+//
