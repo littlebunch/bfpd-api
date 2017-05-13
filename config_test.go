@@ -45,7 +45,6 @@ func TestEnvOverride(t *testing.T) {
   cc := []byte(config)
   yaml.Unmarshal(cc, &cs)
   rc,msg=chkConfig(&cs)
-  fmt.Printf("msg1=%s %v",msg,rc)
   os.Setenv("BFPD_PW_TEST","testpww")
   cs.Pw=os.Getenv("BFPD_PW_TEST")
   rc,msg=chkConfig(&cs)
