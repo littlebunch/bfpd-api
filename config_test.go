@@ -1,4 +1,4 @@
-package bfpdtest
+package main
 import(
   "bfpd/model"
   "fmt"
