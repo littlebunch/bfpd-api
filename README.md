@@ -3,7 +3,7 @@ A small web server providing a REST API for the Branded Food Products Database.
 ### Installation
 Clone this repo into your [go workspace](https://golang.org/doc/code.html)  
 Install supporting packages as needed:     
-*[gin framework](https://github.com/gin-gonic/gin) go get github.com/gin-gonic/gin  and go get gopkg.in/appleboy/gin-jwt.v2 
+*[gin framework](https://github.com/gin-gonic/gin) go get github.com/gin-gonic/gin  and go get gopkg.in/appleboy/gin-jwt.v2    
 *[go gorm](http://jinzhu.me/gorm/)  go get -u github.com/jinzhu/gorm       
 *[gin-jwt](https://github.com/appleboy/gin-jwt) go get github.com/appleboy/gin-jwt       
 *[bcrypt](https://godoc.org/golang.org/x/crypto/bcrypt) go get golang.org/x/crypto/bcrypt        
