@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"bfpd/model"
+	"bfpd-api/model"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/appleboy/gin-jwt.v2"

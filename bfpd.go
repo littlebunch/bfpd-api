@@ -1,8 +1,8 @@
 package main
 
 import (
-	"bfpd/auth"
-	"bfpd/model"
+	"bfpd-api/auth"
+	"bfpd-api/model"
 	"flag"
 	"fmt"
 	"github.com/fvbock/endless"
